@@ -265,3 +265,5 @@ def build_graph():
     logger.info("Graph compiled successfully")
     
     return compiled_graph
+
+qa_graph = build_graph()
