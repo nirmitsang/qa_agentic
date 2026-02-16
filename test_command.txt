@@ -1,0 +1,25 @@
+Run Phase 1 tests
+bashpytest tests/test_phase1.py -v
+```
+Expected:
+```
+tests/test_phase1.py::test_directories_exist PASSED
+tests/test_phase1.py::test_init_files_exist PASSED
+2 passed
+
+Step 7 — Run Phase 2 tests
+bashpytest tests/unit/test_state_enums.py tests/unit/test_state_dataclasses.py tests/unit/test_state_factory.py -v
+Expected: all GREEN.
+
+Step 8 — Run all unit tests together
+bashpytest tests/unit/ -v
+
+Step 9 — Run Phase 3 integration test (Bedrock)
+bashpytest tests/integration/test_llm_connection.py -m integration -v -s
+This is the real LLM call test — will only pass with valid Bedrock credentials.
+
+One likely Windows gotcha to watch for:
+If you get a ModuleNotFoundError: No module named 'src' error, check that your pytest.ini exists and contains:
+ini[pytest]
+pythonpath = .
+That's what fixes the import path on both Mac and Windows.
