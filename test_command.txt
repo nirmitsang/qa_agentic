@@ -23,3 +23,7 @@ If you get a ModuleNotFoundError: No module named 'src' error, check that your p
 ini[pytest]
 pythonpath = .
 That's what fixes the import path on both Mac and Windows.
+
+
+source .venv/bin/activate
+pytest tests/unit/ -v --tb=short

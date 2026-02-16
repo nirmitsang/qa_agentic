@@ -1,0 +1,22 @@
+# src/graph/nodes/human_review_strategy.py
+"""
+Human Review Strategy node - Gate #2 approval.
+"""
+
+import logging
+from src.graph.state import AgentState, WorkflowStage
+
+logger = logging.getLogger(__name__)
+
+
+def human_review_strategy_node(state: AgentState) -> dict:
+    """
+    Human Review Strategy stub - Gate #2.
+    """
+    logger.info("STUB: human_review_strategy_node executing")
+    
+    # TODO: Implement in Phase 8
+    
+    return {
+        "current_stage": WorkflowStage.TEST_CASE_GENERATION,
+    }
