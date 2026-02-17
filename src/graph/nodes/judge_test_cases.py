@@ -24,7 +24,7 @@ def judge_test_cases_node(state: AgentState) -> dict:
     Reads:
         - gherkin_content
         - strategy_content
-        - test_case_iteration_count
+        - test_cases_iteration_count
         - max_judge_iterations
     
     Returns:
@@ -41,7 +41,7 @@ def judge_test_cases_node(state: AgentState) -> dict:
     # Read state
     gherkin_content = state.get("gherkin_content", "")
     strategy_content = state.get("strategy_content", "")
-    iteration_count = state.get("test_case_iteration_count", 0)
+    iteration_count = state.get("test_cases_iteration_count", 0)
     max_iterations = state.get("max_judge_iterations", 3)
     is_final_iteration = iteration_count >= (max_iterations - 1)
     
@@ -63,6 +63,6 @@ def judge_test_cases_node(state: AgentState) -> dict:
         failure_stage=WorkflowStage.TEST_CASE_GENERATION,
         human_review_stage=WorkflowStage.HUMAN_REVIEW_TEST_CASES,
         pass_stage=WorkflowStage.HUMAN_REVIEW_TEST_CASES,
-        iteration_count_key="test_case_iteration_count",
+        iteration_count_key="test_cases_iteration_count",
         evaluation_key="judge_test_cases_evaluation",
     )

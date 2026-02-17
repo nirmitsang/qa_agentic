@@ -5,6 +5,7 @@ Each function reads current_stage from state and returns its string value.
 """
 
 import logging
+from langgraph.graph import END
 from src.graph.state import AgentState, WorkflowStage
 
 logger = logging.getLogger(__name__)
@@ -14,20 +15,25 @@ def _safe_get_stage_value(state: AgentState) -> str:
     """
     Safely extract current_stage value from state.
     
-    Returns the stage's .value string, or "failed" if stage is missing/invalid.
+    Returns the stage's .value string, or END if stage is FAILED/missing
+    so the graph terminates cleanly.
     """
     current_stage = state.get("current_stage", WorkflowStage.FAILED)
     
-    # If it's a WorkflowStage enum, return its value
+    # If it's a WorkflowStage enum, check for FAILED → END
     if isinstance(current_stage, WorkflowStage):
+        if current_stage == WorkflowStage.FAILED:
+            return END
         return current_stage.value
     
-    # If it's already a string, return it
+    # If it's already a string, check for "failed" → END
     if isinstance(current_stage, str):
+        if current_stage == WorkflowStage.FAILED.value:
+            return END
         return current_stage
     
-    # Fallback to failed
-    return WorkflowStage.FAILED.value
+    # Fallback to END (terminate graph)
+    return END
 
 
 # ============================================================================

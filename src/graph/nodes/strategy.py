@@ -4,7 +4,7 @@ Test Strategy Generation Node
 Stage 4: Generate comprehensive test strategy document
 """
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from uuid import uuid4
 from src.graph.state import AgentState, WorkflowStage, WorkflowStatus, DocumentVersion
 from src.agents.llm_client import call_llm
@@ -69,7 +69,7 @@ def strategy_node(state: AgentState) -> dict:
             format="markdown",
             created_by="ai",
             is_approved=False,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(timezone.utc),
         )
         
         # Update history
@@ -87,7 +87,7 @@ def strategy_node(state: AgentState) -> dict:
             "accumulated_cost_usd": state.get("accumulated_cost_usd", 0.0) + response.cost_usd,
         }
     
-    except RuntimeError as e:
+    except (RuntimeError, ValueError, Exception) as e:
         logger.error(f"LLM call failed in Strategy Gen: {e}")
         return {
             "workflow_status": WorkflowStatus.FAILED,

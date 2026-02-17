@@ -6,7 +6,7 @@ The _human_review_base() function implements shared logic for all 5 gates.
 """
 
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from langgraph.types import interrupt
@@ -23,6 +23,7 @@ def _human_review_base(
     document_version_key: str,
     approve_stage: WorkflowStage,
     reject_stage: WorkflowStage,
+    extra_payload: dict | None = None,
 ) -> dict[str, Any]:
     """
     Shared human review logic for all 5 gates.
@@ -76,6 +77,10 @@ def _human_review_base(
         # but judges can include it in their JSON responses. We'll extract it from issues.
         pass  # For now, leave as None
     
+    # Merge any extra payload items (e.g., file_tree for code_plan gate)
+    if extra_payload:
+        payload.update(extra_payload)
+    
     logger.info(f"Interrupting for human review: {gate_name} (version {document_version})")
     
     # INTERRUPT — Graph pauses here until human responds
@@ -99,7 +104,7 @@ def _human_review_base(
             reviewer="human",
             feedback=feedback,
             document_version=document_version,
-            reviewed_at=datetime.utcnow(),
+            reviewed_at=datetime.now(timezone.utc),
         )
         next_stage = approve_stage
         logger.info(f"{gate_name} APPROVED → {next_stage.value}")
@@ -112,7 +117,7 @@ def _human_review_base(
             reviewer="human",
             feedback=f"Approved with edits: {feedback}",
             document_version=document_version,
-            reviewed_at=datetime.utcnow(),
+            reviewed_at=datetime.now(timezone.utc),
         )
         next_stage = approve_stage
         logger.info(f"{gate_name} APPROVED (with edits) → {next_stage.value}")
@@ -132,7 +137,7 @@ def _human_review_base(
             reviewer="human",
             feedback=feedback,
             document_version=document_version,
-            reviewed_at=datetime.utcnow(),
+            reviewed_at=datetime.now(timezone.utc),
         )
         next_stage = reject_stage
         logger.info(f"{gate_name} REJECTED → {next_stage.value} (regenerate)")

@@ -4,7 +4,7 @@ Test Case Generation Node (Gherkin)
 Stage 6: Generate Gherkin feature files from approved strategy
 """
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from uuid import uuid4
 from src.graph.state import AgentState, WorkflowStage, WorkflowStatus, DocumentVersion
 from src.agents.llm_client import call_llm
@@ -34,12 +34,12 @@ def test_case_generation_node(state: AgentState) -> dict:
         team_context = state.get("team_context")
         test_cases_iteration_count = state.get("test_cases_iteration_count", 0)
         judge_evaluation = state.get("judge_test_cases_evaluation")
-        current_version = state.get("current_gherkin_version", 0)
+        current_version = state.get("current_test_cases_version", 0)
         workflow_id = state.get("workflow_id", "")
         
         # Build judge feedback (empty on first attempt)
         judge_feedback = ""
-        if judge_evaluation and test_case_iteration_count > 0:
+        if judge_evaluation and test_cases_iteration_count > 0:
             judge_feedback = f"Score: {judge_evaluation.score}/100\n{judge_evaluation.feedback}"
         else:
             judge_feedback = "First attempt - no previous feedback."
@@ -98,26 +98,26 @@ def test_case_generation_node(state: AgentState) -> dict:
             format="gherkin",
             created_by="ai",
             is_approved=False,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(timezone.utc),
         )
         
         # Update history
-        gherkin_history = state.get("gherkin_history", [])
-        updated_history = gherkin_history + [doc_version]
+        test_cases_history = state.get("test_cases_history", [])
+        updated_history = test_cases_history + [doc_version]
         
         logger.info(f"Gherkin v{new_version} generated ({validation_result.scenario_count} scenarios)")
         
         return {
             "gherkin_content": gherkin_content,
             "gherkin_validation_passed": validation_result.is_valid,
-            "current_gherkin_version": new_version,
-            "gherkin_history": updated_history,
+            "current_test_cases_version": new_version,
+            "test_cases_history": updated_history,
             "test_cases_iteration_count": test_cases_iteration_count + 1,
             "current_stage": WorkflowStage.JUDGE_TEST_CASES,
             "accumulated_cost_usd": state.get("accumulated_cost_usd", 0.0) + response.cost_usd,
         }
     
-    except RuntimeError as e:
+    except (RuntimeError, ValueError, Exception) as e:
         logger.error(f"LLM call failed in Test Case Generation: {e}")
         return {
             "workflow_status": WorkflowStatus.FAILED,

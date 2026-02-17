@@ -298,8 +298,43 @@ def test_run_judge_handles_invalid_json(mock_llm):
     # Verify failure state
     assert result["workflow_status"] == WorkflowStatus.FAILED
     assert result["current_stage"] == WorkflowStage.FAILED
-    # Fixed: check for lowercase "invalid json" since we call .lower()
-    assert "invalid json" in result["error_message"].lower()
+    
+    # Check for general failure message (handles both JSON parsing and schema validation errors)
+    # The actual error for missing keys is "Judge ... failed: 'result'" (KeyError)
+    assert "judge judge_requirements failed" in result["error_message"].lower()
+
+
+@patch("src.graph.nodes._judge_base.call_llm")
+def test_run_judge_handles_truly_malformed_json(mock_llm):
+    """Truly malformed JSON should return FAILED status."""
+    mock_llm.return_value = MagicMock(
+        content="This is not JSON at all {{ code: 123 }}", 
+        cost_usd=0.01,
+        input_tokens=100,
+        output_tokens=50,
+    )
+
+    state = create_initial_state(
+        raw_input="Test input",
+        team_context=DUMMY_CONTEXT,
+        team_id="team_1",
+        qa_confidence_threshold=0.85,
+    )
+
+    result = run_judge(
+        state=state,
+        system_prompt="sys",
+        user_prompt="user",
+        trace_name="judge_requirements",
+        failure_stage=WorkflowStage.REQUIREMENTS_SPEC_GEN,
+        human_review_stage=WorkflowStage.HUMAN_REVIEW_SPEC,
+        pass_stage=WorkflowStage.HUMAN_REVIEW_SPEC,
+        iteration_count_key="requirements_iteration_count",
+        evaluation_key="judge_requirements_evaluation",
+    )
+
+    assert result["workflow_status"] == WorkflowStatus.FAILED
+    assert "judge judge_requirements failed" in result["error_message"].lower()
 
 
 @patch("src.graph.nodes._judge_base.call_llm")

@@ -7,7 +7,7 @@ the LangGraph pipeline. This is the single source of truth for state structure.
 
 from enum import Enum
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import TypedDict, Optional
 from uuid import uuid4
 
@@ -102,7 +102,7 @@ class DocumentVersion:
     storage_url: Optional[str] = None
     judge_score: Optional[float] = None
     judge_feedback: Optional[str] = None
-    created_at: datetime = field(default_factory=datetime.utcnow)
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 @dataclass
@@ -124,7 +124,7 @@ class JudgeEvaluation:
     feedback: str
     issues: list[dict] = field(default_factory=list)
     recommendations: list[str] = field(default_factory=list)
-    timestamp: datetime = field(default_factory=datetime.utcnow)
+    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 @dataclass
@@ -217,6 +217,9 @@ class AgentState(TypedDict, total=False):
     
     # Cost tracking
     accumulated_cost_usd: float
+    
+    # Judge configuration
+    max_judge_iterations: int
 
 
 # ============================================================================

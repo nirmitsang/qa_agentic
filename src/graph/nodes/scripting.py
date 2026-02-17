@@ -4,7 +4,7 @@ Test Script Generation Node (Scripting)
 Stage 10: Generate test code following approved Code Structure Plan
 """
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from uuid import uuid4
 from src.graph.state import AgentState, WorkflowStage, WorkflowStatus, DocumentVersion
 from src.agents.llm_client import call_llm
@@ -73,7 +73,7 @@ def scripting_node(state: AgentState) -> dict:
             format="python",
             created_by="ai",
             is_approved=False,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(timezone.utc),
         )
         
         # Update history
@@ -92,7 +92,7 @@ def scripting_node(state: AgentState) -> dict:
             "accumulated_cost_usd": state.get("accumulated_cost_usd", 0.0) + response.cost_usd,
         }
     
-    except RuntimeError as e:
+    except (RuntimeError, ValueError, Exception) as e:
         logger.error(f"LLM call failed in Scripting: {e}")
         return {
             "workflow_status": WorkflowStatus.FAILED,

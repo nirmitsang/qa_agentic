@@ -45,17 +45,17 @@ class LLMResponse:
 # ============================================================================
 
 TOKEN_BUDGETS = {
-    "qa_interaction": 2048,
+    "qa_interaction": 4096,
     "requirements_spec_gen": 8192,
-    "judge_requirements": 2048,
-    "strategy": 4096,
-    "judge_strategy": 2048,
+    "judge_requirements": 4096,
+    "strategy": 8192,
+    "judge_strategy": 4096,
     "test_case_generation": 16384,
-    "judge_test_cases": 2048,
+    "judge_test_cases": 4096,
     "code_structure_planning": 16384,
-    "judge_code_plan": 2048,
-    "scripting": 8192,
-    "judge_code": 2048,
+    "judge_code_plan": 4096,
+    "scripting": 16384,
+    "judge_code": 4096,
 }
 
 
@@ -262,36 +262,67 @@ def call_llm(
 
 def extract_json_from_response(text: str) -> dict:
     """
-    Extract JSON from LLM response, handling markdown code fences.
-    
-    Args:
-        text: Raw text that may contain JSON with or without ```json fences
-        
-    Returns:
-        Parsed JSON as dict
-        
-    Raises:
-        ValueError: If text is not valid JSON
+    Extract JSON from LLM response using robust parsing.
     """
-    # Strip markdown code fences if present
-    stripped = text.strip()
+    # Import locally to avoid potential circular/top-level issues if any
+    import json
+    import re
     
-    # Remove ```json and ``` if present
+    text = text.strip()
+    decoder = json.JSONDecoder()
+    
+    # helper to try parsing from a specific index
+    def try_decode(s, start_idx):
+        try:
+             obj, end_idx = decoder.raw_decode(s, idx=start_idx)
+             return obj
+        except json.JSONDecodeError:
+            return None
+
+    # Strategy 1: Attempt to parse the whole string (stripped of fences)
+    # This handles simple cases fast
+    stripped = text
     if stripped.startswith("```json"):
-        stripped = stripped[7:]  # Remove ```json
+        stripped = stripped[7:]
     elif stripped.startswith("```"):
-        stripped = stripped[3:]  # Remove ```
-    
+        stripped = stripped[3:]
     if stripped.endswith("```"):
-        stripped = stripped[:-3]  # Remove closing ```
-    
+        stripped = stripped[:-3]
     stripped = stripped.strip()
     
-    # Parse JSON
     try:
         return json.loads(stripped)
-    except json.JSONDecodeError as e:
-        raise ValueError(f"Invalid JSON in response: {e}") from e
+    except json.JSONDecodeError:
+        pass
+
+    # Strategy 2: Scan for first '{' or '[' and try to decode from there
+    # This correctly handles nested structures where regex fails
+    for i, char in enumerate(text):
+        if char in ('{', '['):
+            obj = try_decode(text, i)
+            if obj is not None:
+                # If we found a list, wrap it if needed (though our prompt expects dict)
+                if isinstance(obj, list):
+                    return {"items": obj}
+                return obj
+    
+    # Strategy 3: Best-effort repair using ast.literal_eval (handles single quotes, trailing commas)
+    import ast
+    try:
+        # Find the first { ... } block
+        brace_match = re.search(r"(\{.*\})", text, re.DOTALL)
+        if brace_match:
+            candidate = brace_match.group(1)
+            # limited fixups
+            candidate = candidate.replace("true", "True").replace("false", "False").replace("null", "None")
+            return ast.literal_eval(candidate)
+    except (ValueError, SyntaxError):
+        pass
+
+    raise ValueError(
+        f"Could not extract valid JSON from LLM response. "
+        f"Response starts with: {text[:200]}..."
+    )
 
 
 def verify_llm_connection() -> bool:

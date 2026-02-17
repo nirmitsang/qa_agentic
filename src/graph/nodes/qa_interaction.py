@@ -4,7 +4,7 @@ QA Interaction Node
 Stage 1: Confidence assessment and clarifying question generation
 """
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from uuid import uuid4
 from src.graph.state import AgentState, WorkflowStage, WorkflowStatus, QASession
 from src.agents.llm_client import call_llm, extract_json_from_response
@@ -36,8 +36,16 @@ def qa_interaction_node(state: AgentState) -> dict:
         # Build previous Q&A summary
         previous_qa_summary = ""
         if qa_sessions:
+            def _question_text(q) -> str:
+                """Extract text from question (may be str, dict, or Question dataclass)."""
+                if isinstance(q, str):
+                    return q
+                if isinstance(q, dict):
+                    return q.get("text", q.get("id", str(q)))
+                return getattr(q, "text", str(q))
+
             previous_qa_summary = "\n\n".join([
-                f"Batch {i+1}:\nQuestions: {', '.join([q.text for q in session.questions])}\n"
+                f"Batch {i+1}:\nQuestions: {', '.join([_question_text(q) for q in session.questions])}\n"
                 f"Answers: {session.answers}"
                 for i, session in enumerate(qa_sessions)
             ])
@@ -71,7 +79,7 @@ def qa_interaction_node(state: AgentState) -> dict:
             answers={},  # Will be filled by Streamlit on next iteration
             ai_confidence=result_json.get("ai_confidence", 0.0),
             status="pending_answers",
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(timezone.utc),
         )
         
         # Update qa_sessions list
@@ -102,7 +110,7 @@ def qa_interaction_node(state: AgentState) -> dict:
                 "accumulated_cost_usd": state.get("accumulated_cost_usd", 0.0) + response.cost_usd,
             }
     
-    except RuntimeError as e:
+    except (RuntimeError, ValueError, Exception) as e:
         logger.error(f"LLM call failed in QA Interaction: {e}")
         return {
             "workflow_status": WorkflowStatus.FAILED,

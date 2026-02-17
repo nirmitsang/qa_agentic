@@ -4,7 +4,7 @@ Unit tests for Test Case Generation Node
 """
 from unittest.mock import patch, MagicMock
 import pytest
-from src.graph.nodes.test_case_generation import test_case_generation_node
+from src.graph.nodes.test_case_generation import test_case_generation_node as _tcg_node
 from src.graph.state import (
     create_initial_state, TeamContext, FrameworkType, 
     WorkflowStage
@@ -45,7 +45,7 @@ def test_valid_gherkin_passes_through(mock_llm):
     state = create_initial_state("Test login", DUMMY_CONTEXT, "team", 0.85)
     state["strategy_content"] = "# Strategy..."
     state["requirements_spec_content"] = "# Requirements..."
-    result = test_case_generation_node(state)
+    result = _tcg_node(state)
     
     assert result["gherkin_validation_passed"] is True
     assert result["gherkin_content"] == VALID_GHERKIN
@@ -78,7 +78,7 @@ def test_invalid_gherkin_triggers_internal_retry(mock_llm):
     state = create_initial_state("Test login", DUMMY_CONTEXT, "team", 0.85)
     state["strategy_content"] = "# Strategy..."
     state["requirements_spec_content"] = "# Requirements..."
-    result = test_case_generation_node(state)
+    result = _tcg_node(state)
     
     assert mock_llm.call_count == 2  # Retry happened
     assert result["gherkin_validation_passed"] is True
@@ -100,6 +100,6 @@ def test_routes_to_judge_test_cases(mock_llm):
     state = create_initial_state("Test login", DUMMY_CONTEXT, "team", 0.85)
     state["strategy_content"] = "# Strategy..."
     state["requirements_spec_content"] = "# Requirements..."
-    result = test_case_generation_node(state)
+    result = _tcg_node(state)
     
     assert result["current_stage"] == WorkflowStage.JUDGE_TEST_CASES

@@ -4,7 +4,7 @@ Requirements Specification Generation Node
 Stage 2: Generate structured requirements document
 """
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from uuid import uuid4
 from src.graph.state import AgentState, WorkflowStage, WorkflowStatus, DocumentVersion
 from src.agents.llm_client import call_llm
@@ -38,9 +38,16 @@ def requirements_spec_gen_node(state: AgentState) -> dict:
         # Build Q&A summary
         qa_summary = ""
         if qa_sessions:
+            def _question_text(q) -> str:
+                if isinstance(q, str):
+                    return q
+                if isinstance(q, dict):
+                    return q.get("text", q.get("id", str(q)))
+                return getattr(q, "text", str(q))
+
             qa_summary = "\n\n".join([
                 f"Batch {session.batch_number}:\n" +
-                "\n".join([f"Q: {q.get('text', q) if isinstance(q, dict) else q.text}" for q in session.questions]) +
+                "\n".join([f"Q: {_question_text(q)}" for q in session.questions]) +
                 f"\nAnswers: {session.answers}"
                 for session in qa_sessions
             ])
@@ -83,7 +90,7 @@ def requirements_spec_gen_node(state: AgentState) -> dict:
             format="markdown",
             created_by="ai",
             is_approved=False,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(timezone.utc),
         )
         
         # Update history
@@ -101,7 +108,7 @@ def requirements_spec_gen_node(state: AgentState) -> dict:
             "accumulated_cost_usd": state.get("accumulated_cost_usd", 0.0) + response.cost_usd,
         }
     
-    except RuntimeError as e:
+    except (RuntimeError, ValueError, Exception) as e:
         logger.error(f"LLM call failed in Requirements Spec Gen: {e}")
         return {
             "workflow_status": WorkflowStatus.FAILED,

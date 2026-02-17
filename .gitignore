@@ -9,5 +9,11 @@ env/
 venv/
 ENV/
 
+# Environment variables (secrets)
+.env
+
 # macOS system files
 .DS_Store
+
+# Pytest
+.pytest_cache/

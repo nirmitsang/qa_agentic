@@ -126,17 +126,10 @@ def run_judge(
             ),
         }
     
-    except RuntimeError as e:
-        logger.error(f"LLM call failed in {trace_name}: {e}")
+    except (RuntimeError, KeyError, ValueError, TypeError, Exception) as e:
+        logger.error(f"Judge evaluation failed in {trace_name}: {e}")
         return {
             "workflow_status": WorkflowStatus.FAILED,
             "error_message": f"Judge {trace_name} failed: {str(e)}",
-            "current_stage": WorkflowStage.FAILED,
-        }
-    except (KeyError, ValueError, TypeError) as e:
-        logger.error(f"Failed to parse judge response in {trace_name}: {e}")
-        return {
-            "workflow_status": WorkflowStatus.FAILED,
-            "error_message": f"Judge {trace_name} returned invalid JSON: {str(e)}",
             "current_stage": WorkflowStage.FAILED,
         }
