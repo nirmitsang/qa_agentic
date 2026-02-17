@@ -110,60 +110,56 @@ def _extract_conventions_summary(tech_context_md: str) -> str:
 def fetch_context(
     team_id: str,
     component: str = "",
-    tech_context_path: Optional[str] = None,
-    codebase_map_path: Optional[str] = None,
+    tech_context_path: Optional[str | list[str]] = None,
+    codebase_map_path: Optional[str | list[str]] = None,
 ) -> TeamContext:
     """
     Fetch team-specific context for test generation.
     
-    V1 Implementation: Reads local .md files from disk.
-    V2 Implementation: Will query ChromaDB.
-    V3 Implementation: Will query Pinecone + Neo4j.
+    Supports single path or list of paths for context files.
+    Multiple files are concatenated with newlines.
     
     Args:
         team_id: Team identifier
         component: Component being tested (unused in V1)
-        tech_context_path: Path to tech_context.md file
-        codebase_map_path: Path to codebase_map.md file
+        tech_context_path: Path(s) to tech_context.md file(s)
+        codebase_map_path: Path(s) to codebase_map.md file(s)
         
     Returns:
         TeamContext dataclass with loaded content
-        
-    Note:
-        Gracefully handles missing files by returning empty strings with warning logs.
-        Does NOT raise exceptions for missing files.
     """
     logger.info(f"Fetching context for team={team_id} component={component}")
     
-    # Read tech_context.md
-    tech_context_md = ""
-    if tech_context_path:
-        tech_path = Path(tech_context_path)
-        if tech_path.exists():
-            try:
-                tech_context_md = tech_path.read_text(encoding="utf-8")
-                logger.info(f"Loaded tech_context.md ({len(tech_context_md)} chars)")
-            except Exception as e:
-                logger.warning(f"Failed to read tech_context.md: {e}")
-                tech_context_md = ""
+    def _read_paths(paths: Optional[str | list[str]], label: str) -> str:
+        """Helper to read one or more files and join content."""
+        if not paths:
+            return ""
+            
+        if isinstance(paths, str):
+            path_list = [paths]
         else:
-            logger.warning(f"tech_context.md not found at: {tech_context_path}")
-            tech_context_md = ""
+            path_list = paths
+            
+        contents = []
+        for p in path_list:
+            path_obj = Path(p)
+            if path_obj.exists():
+                try:
+                    text = path_obj.read_text(encoding="utf-8")
+                    logger.info(f"Loaded {label}: {path_obj.name} ({len(text)} chars)")
+                    contents.append(text)
+                except Exception as e:
+                    logger.warning(f"Failed to read {label} at {p}: {e}")
+            else:
+                logger.warning(f"{label} not found at: {p}")
+        
+        return "\n\n".join(contents)
+
+    # Read tech_context
+    tech_context_md = _read_paths(tech_context_path, "tech_context")
     
-    # Read codebase_map.md
-    codebase_map_md = ""
-    if codebase_map_path:
-        codebase_path = Path(codebase_map_path)
-        if codebase_path.exists():
-            try:
-                codebase_map_md = codebase_path.read_text(encoding="utf-8")
-                logger.info(f"Loaded codebase_map.md ({len(codebase_map_md)} chars)")
-            except Exception as e:
-                logger.warning(f"Failed to read codebase_map.md: {e}")
-                codebase_map_md = ""
-        else:
-            logger.warning(f"codebase_map.md not found at: {codebase_map_path}")
-            codebase_map_md = ""
+    # Read codebase_map
+    codebase_map_md = _read_paths(codebase_map_path, "codebase_map")
     
     # Detect framework type
     framework_type = _detect_framework_type(tech_context_md) if tech_context_md else FrameworkType.UNKNOWN

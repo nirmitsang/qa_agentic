@@ -4,6 +4,7 @@ Unit tests for conditional routing functions.
 """
 
 import pytest
+from langgraph.graph import END
 from src.graph.edges.conditional import (
     route_after_qa_interaction,
     route_after_judge_requirements,
@@ -27,10 +28,10 @@ def test_route_reads_current_stage():
     assert result == "requirements_spec_gen"
 
 
-def test_route_returns_failed_on_missing_stage():
-    """Routing function returns 'failed' when current_stage is missing."""
+def test_route_returns_end_on_missing_stage():
+    """Routing function returns END when current_stage is missing."""
     result = route_after_qa_interaction({})
-    assert result == "failed"
+    assert result == END
 
 
 def test_route_handles_completed():
@@ -41,10 +42,10 @@ def test_route_handles_completed():
 
 
 def test_route_handles_failed():
-    """Routing function handles FAILED stage."""
+    """Routing function handles FAILED stage by returning END."""
     state = {"current_stage": WorkflowStage.FAILED}
     result = route_after_judge_requirements(state)
-    assert result == "failed"
+    assert result == END
 
 
 def test_route_after_judge_requirements():

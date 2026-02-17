@@ -223,28 +223,40 @@ def _render_sidebar():
     # Context file uploaders
     st.subheader("📂 Context Files")
 
-    tech_file = st.file_uploader(
-        "Upload tech_context.md",
+    tech_files = st.file_uploader(
+        "Upload tech_context.md (one or more)",
         type=["md", "txt"],
         key="tech_upload",
+        accept_multiple_files=True,
     )
-    if tech_file:
-        # Write to temp file and update path
-        tmp_path = os.path.join(tempfile.gettempdir(), "tech_context_uploaded.md")
-        Path(tmp_path).write_bytes(tech_file.getvalue())
-        st.session_state.tech_context_path = tmp_path
-        st.success(f"✅ Loaded ({len(tech_file.getvalue())} bytes)")
+    if tech_files:
+        # Write to temp files and update paths
+        paths = []
+        for i, file in enumerate(tech_files):
+            tmp_path = os.path.join(tempfile.gettempdir(), f"tech_context_{i}_{file.name}")
+            Path(tmp_path).write_bytes(file.getvalue())
+            paths.append(tmp_path)
+            
+        st.session_state.tech_context_path = paths
+        total_bytes = sum(len(f.getvalue()) for f in tech_files)
+        st.success(f"✅ Loaded {len(paths)} file(s) ({total_bytes} bytes)")
 
-    codebase_file = st.file_uploader(
-        "Upload codebase_map.md",
+    codebase_files = st.file_uploader(
+        "Upload codebase_map.md (one or more)",
         type=["md", "txt"],
         key="codebase_upload",
+        accept_multiple_files=True,
     )
-    if codebase_file:
-        tmp_path = os.path.join(tempfile.gettempdir(), "codebase_map_uploaded.md")
-        Path(tmp_path).write_bytes(codebase_file.getvalue())
-        st.session_state.codebase_map_path = tmp_path
-        st.success(f"✅ Loaded ({len(codebase_file.getvalue())} bytes)")
+    if codebase_files:
+        paths = []
+        for i, file in enumerate(codebase_files):
+            tmp_path = os.path.join(tempfile.gettempdir(), f"codebase_{i}_{file.name}")
+            Path(tmp_path).write_bytes(file.getvalue())
+            paths.append(tmp_path)
+            
+        st.session_state.codebase_map_path = paths
+        total_bytes = sum(len(f.getvalue()) for f in codebase_files)
+        st.success(f"✅ Loaded {len(paths)} file(s) ({total_bytes} bytes)")
 
     st.divider()
 
