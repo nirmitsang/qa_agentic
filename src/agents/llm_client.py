@@ -50,13 +50,16 @@ TOKEN_BUDGETS = {
     "judge_requirements": 4096,
     "strategy": 8192,
     "judge_strategy": 4096,
-    "test_case_generation": 16384,
+    "test_case_generation": 8192,
     "judge_test_cases": 4096,
-    "code_structure_planning": 16384,
+    "code_structure_planning": 8192,
     "judge_code_plan": 4096,
-    "scripting": 16384,
+    "scripting": 8192,
     "judge_code": 4096,
 }
+
+# Max continuation calls when output is truncated (stop_reason == "max_tokens")
+MAX_CONTINUATIONS = 3
 
 
 # ============================================================================
@@ -71,7 +74,10 @@ def _call_bedrock(
 ) -> LLMResponse:
     """
     Call AWS Bedrock with Claude 3.5 Sonnet (EU cross-region inference).
-    Uses exact pattern from PRD Section 6.3.
+    
+    Includes automatic continuation: if the response is truncated
+    (stop_reason == "max_tokens"), sends follow-up calls to get the
+    rest of the output and stitches results together.
     """
     start_time = time.time()
     
@@ -83,17 +89,20 @@ def _call_bedrock(
             aws_secret_access_key=settings.aws_secret_access_key or None,
         )
         
+        # --- Initial call ---
+        messages = [
+            {
+                "role": "user",
+                "content": [{"type": "text", "text": user_prompt}]
+            }
+        ]
+        
         native_request = {
             "anthropic_version": "bedrock-2023-05-31",
             "max_tokens": max_tokens,
             "temperature": temperature,
             "system": system_prompt,
-            "messages": [
-                {
-                    "role": "user",
-                    "content": [{"type": "text", "text": user_prompt}]
-                }
-            ],
+            "messages": messages,
         }
         
         response = client.invoke_model(
@@ -103,22 +112,77 @@ def _call_bedrock(
         
         model_response = json.loads(response["body"].read())
         content_text = model_response["content"][0]["text"]
+        stop_reason = model_response.get("stop_reason", "end_turn")
         
-        # Extract usage stats
+        # Accumulate usage across continuations
         usage = model_response.get("usage", {})
-        input_tokens = usage.get("input_tokens", 0)
-        output_tokens = usage.get("output_tokens", 0)
+        total_input_tokens = usage.get("input_tokens", 0)
+        total_output_tokens = usage.get("output_tokens", 0)
+        
+        # --- Continuation loop ---
+        continuation_count = 0
+        while stop_reason == "max_tokens" and continuation_count < MAX_CONTINUATIONS:
+            continuation_count += 1
+            logger.info(
+                f"Response truncated (stop_reason=max_tokens). "
+                f"Sending continuation {continuation_count}/{MAX_CONTINUATIONS}..."
+            )
+            
+            # Build continuation messages: original user prompt + assistant partial + user "continue"
+            continuation_messages = [
+                {
+                    "role": "user",
+                    "content": [{"type": "text", "text": user_prompt}]
+                },
+                {
+                    "role": "assistant",
+                    "content": [{"type": "text", "text": content_text}]
+                },
+                {
+                    "role": "user",
+                    "content": [{"type": "text", "text": "Continue from where you left off. Do not repeat any content already generated. Pick up exactly where you stopped."}]
+                },
+            ]
+            
+            continuation_request = {
+                "anthropic_version": "bedrock-2023-05-31",
+                "max_tokens": max_tokens,
+                "temperature": temperature,
+                "system": system_prompt,
+                "messages": continuation_messages,
+            }
+            
+            cont_response = client.invoke_model(
+                modelId=settings.bedrock_model_id,
+                body=json.dumps(continuation_request)
+            )
+            
+            cont_model_response = json.loads(cont_response["body"].read())
+            continuation_text = cont_model_response["content"][0]["text"]
+            stop_reason = cont_model_response.get("stop_reason", "end_turn")
+            
+            # Accumulate
+            content_text += continuation_text
+            cont_usage = cont_model_response.get("usage", {})
+            total_input_tokens += cont_usage.get("input_tokens", 0)
+            total_output_tokens += cont_usage.get("output_tokens", 0)
+        
+        if continuation_count > 0:
+            logger.info(
+                f"Continuation complete. {continuation_count} follow-up call(s). "
+                f"Total output: {len(content_text)} chars."
+            )
         
         # Calculate cost (approximate Claude 3.5 Sonnet pricing)
         # Input: $3/1M tokens, Output: $15/1M tokens
-        cost_usd = (input_tokens / 1_000_000 * 3.0) + (output_tokens / 1_000_000 * 15.0)
+        cost_usd = (total_input_tokens / 1_000_000 * 3.0) + (total_output_tokens / 1_000_000 * 15.0)
         
         latency_ms = int((time.time() - start_time) * 1000)
         
         return LLMResponse(
             content=content_text,
-            input_tokens=input_tokens,
-            output_tokens=output_tokens,
+            input_tokens=total_input_tokens,
+            output_tokens=total_output_tokens,
             cost_usd=cost_usd,
             trace_name="",  # Set by caller
             model_id=settings.bedrock_model_id,

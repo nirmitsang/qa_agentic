@@ -66,6 +66,7 @@ def requirements_spec_gen_node(state: AgentState) -> dict:
             raw_input=raw_input,
             qa_summary=qa_summary,
             tech_context_md=team_context.tech_context_md if team_context else "",
+            codebase_map_md=team_context.codebase_map_md if team_context else "",
             framework_type=team_context.framework_type.value if team_context else "unknown",
             judge_feedback=judge_feedback,
             iteration=requirements_iteration_count + 1,

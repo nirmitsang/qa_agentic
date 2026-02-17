@@ -27,6 +27,7 @@ def strategy_node(state: AgentState) -> dict:
     
     try:
         # Read state
+        raw_input = state.get("raw_input", "")
         requirements_spec_content = state.get("requirements_spec_content", "")
         team_context = state.get("team_context")
         strategy_iteration_count = state.get("strategy_iteration_count", 0)
@@ -43,8 +44,10 @@ def strategy_node(state: AgentState) -> dict:
         
         # Build user prompt
         user_prompt = STRATEGY_USER_PROMPT_TEMPLATE.format(
+            raw_input=raw_input,
             requirements_spec_content=requirements_spec_content,
             tech_context_md=team_context.tech_context_md if team_context else "",
+            codebase_map_md=team_context.codebase_map_md if team_context else "",
             framework_type=team_context.framework_type.value if team_context else "unknown",
             judge_feedback=judge_feedback,
             iteration=strategy_iteration_count + 1,
