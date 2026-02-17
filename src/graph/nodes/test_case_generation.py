@@ -57,6 +57,7 @@ def test_case_generation_node(state: AgentState) -> dict:
                 requirements_spec_content=requirements_spec_content,
                 tech_context_md=team_context.tech_context_md if team_context else "",
                 framework_type=team_context.framework_type.value if team_context else "unknown",
+                human_guidance=state.get("human_guidance") or "None provided.",
                 judge_feedback=judge_feedback,
                 gherkin_errors=gherkin_errors,
                 iteration=test_cases_iteration_count + 1,

@@ -92,6 +92,7 @@ def _human_review_base(
     decision = human_response.get("decision", "REJECT")  # Default to REJECT if missing
     feedback = human_response.get("feedback", "")
     edited_content = human_response.get("edited_content", "")
+    guidance = human_response.get("guidance", "")
     
     # Update approval gate in state
     approval_gates = state.get("approval_gates", {})
@@ -126,6 +127,7 @@ def _human_review_base(
         return {
             document_content_key: edited_content,
             "approval_gates": approval_gates,
+            "human_guidance": guidance if guidance else None,
             "current_stage": next_stage,
         }
     
@@ -146,12 +148,14 @@ def _human_review_base(
         return {
             "approval_gates": approval_gates,
             "human_feedback": feedback,
+            "human_guidance": guidance if guidance else None,
             "current_stage": next_stage,
         }
     
     # APPROVE case (no edits)
     return {
         "approval_gates": approval_gates,
+        "human_guidance": guidance if guidance else None,
         "current_stage": next_stage,
     }
 

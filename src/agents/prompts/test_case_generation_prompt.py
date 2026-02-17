@@ -68,6 +68,9 @@ Tech Context:
 
 Framework Type: {framework_type}
 
+Human Guidance (additional context from reviewer, if any):
+{human_guidance}
+
 Judge Feedback (from previous iteration, if any):
 {judge_feedback}
 
@@ -78,5 +81,6 @@ Current Iteration: {iteration}
 
 Generate a complete Gherkin feature file that implements all test cases from the strategy.
 Every test case ID from the strategy (TC_XXX_YYY) must appear as a tag on its corresponding scenario.
+If Human Guidance is provided, incorporate it into the test cases.
 If Gherkin syntax errors are present, fix them in this iteration.
 Output raw Gherkin starting with "Feature:" — no markdown fences, no preamble."""

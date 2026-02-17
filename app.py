@@ -564,6 +564,13 @@ def _render_human_review_gate():
                 height=300,
             )
 
+        # Always-visible guidance for the next stage
+        guidance = st.text_area(
+            "💡 Guidance for Next Stage (optional)",
+            placeholder="Add extra context or instructions for the next stage's AI agent...",
+            height=80,
+        )
+
         submitted = st.form_submit_button(
             f"Submit {decision}",
             use_container_width=True,
@@ -575,6 +582,7 @@ def _render_human_review_gate():
                 "decision": decision,
                 "feedback": feedback,
                 "edited_content": edited_content,
+                "guidance": guidance,
             }
 
             try:

@@ -92,6 +92,9 @@ Codebase Map:
 
 Framework Type: {framework_type}
 
+Human Guidance (additional context from reviewer, if any):
+{human_guidance}
+
 Judge Feedback (from previous iteration, if any):
 {judge_feedback}
 
@@ -100,4 +103,5 @@ Current Iteration: {iteration}
 Generate a complete test strategy document following the 8-section structure defined in the system prompt.
 Ensure the Coverage Matrix maps every FR from the requirements spec to at least one test case.
 IMPORTANT: Use the Original Feature Description and Codebase Map for additional context. Test case titles must be SPECIFIC — reference actual entities, not generic descriptions.
+If Human Guidance is provided, incorporate it into your strategy.
 If this is a retry (iteration > 1), incorporate the judge feedback to fix identified issues."""

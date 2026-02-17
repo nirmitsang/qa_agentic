@@ -119,6 +119,9 @@ Team Conventions Summary:
 
 Framework Type: {framework_type}
 
+Human Guidance (additional context from reviewer, if any):
+{human_guidance}
+
 Judge Feedback (from previous iteration, if any):
 {judge_feedback}
 
@@ -127,4 +130,5 @@ Current Iteration: {iteration}
 Generate a complete Code Structure Plan following the 9-section structure defined in the system prompt.
 Treat codebase_map.md as the authoritative source for what exists — reuse existing utilities wherever possible.
 The plan must be detailed enough that the Scripting Agent can implement it WITHOUT making any architectural decisions.
+If Human Guidance is provided, incorporate it into the plan.
 If this is a retry (iteration > 1), incorporate the judge feedback to fix identified issues."""

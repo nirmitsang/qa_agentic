@@ -209,6 +209,7 @@ class AgentState(TypedDict, total=False):
     # Gates
     approval_gates: dict[str, ApprovalGate]
     human_feedback: Optional[str]
+    human_guidance: Optional[str]
     
     # V2 stubs
     execution_result: Optional[dict]
@@ -312,6 +313,7 @@ def create_initial_state(
             "code": ApprovalGate(gate_name="code"),
         },
         human_feedback=None,
+        human_guidance=None,
         
         # V2 stubs
         execution_result=None,

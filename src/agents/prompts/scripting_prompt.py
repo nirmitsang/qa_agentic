@@ -72,6 +72,9 @@ Codebase Map (for import paths of existing utilities):
 
 Framework Type: {framework_type}
 
+Human Guidance (additional context from reviewer, if any):
+{human_guidance}
+
 Judge Feedback (from previous iteration, if any):
 {judge_feedback}
 
@@ -81,6 +84,7 @@ Generate the test script following the approved Code Structure Plan STRICTLY.
 - Use the exact class names, method names, and file structure from the plan
 - Import from existing utilities as specified in the plan's Utility Reuse Strategy
 - Do NOT create utilities that the plan says to reuse from existing code
+- If Human Guidance is provided, incorporate it while still adhering to the plan
 - Output raw Python code with no markdown fences, no preamble.
 
 If this is a retry (iteration > 1), incorporate the judge feedback while still adhering to the plan structure."""
