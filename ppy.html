@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Journey Timeline</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&amp;family=Inter:wght@300;400;500;600&amp;display=swap"
+        rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            width: 1280px;
+            height: 720px;
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+            background-color: #F4F7F9;
+            color: #1E293B;
+        }
+
+        .slide-container {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Header */
+        .header {
+            height: 100px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 60px;
+            background-color: white;
+            border-bottom: 4px solid #00AEEF;
+            flex-shrink: 0;
+        }
+
+        .header-title {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 36px;
+            font-weight: 700;
+            color: #00395D;
+        }
+
+        .logo-container {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+            font-size: 20px;
+            color: #00395D;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Main Content */
+        .content-body {
+            flex: 1;
+            padding: 40px 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+        }
+
+        /* Timeline Container */
+        .timeline-wrapper {
+            display: flex;
+            justify-content: space-between;
+            align-items: stretch;
+            position: relative;
+            gap: 20px;
+            height: 480px;
+        }
+
+        /* Connection Line */
+        .timeline-line {
+            position: absolute;
+            top: 60px;
+            left: 50px;
+            right: 50px;
+            height: 4px;
+            background: #E2E8F0;
+            z-index: 0;
+        }
+
+        .timeline-line-progress {
+            position: absolute;
+            top: 60px;
+            left: 50px;
+            width: 0;
+            height: 4px;
+            background: #00AEEF;
+            z-index: 1;
+            animation: growLine 1.5s ease-out forwards;
+        }
+
+        @keyframes growLine {
+            to {
+                width: 90%;
+            }
+        }
+
+        /* Timeline Cards */
+        .card-container {
+            flex: 1;
+            position: relative;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .marker {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: white;
+            border: 4px solid #CBD5E1;
+            margin: 40px auto 30px;
+            position: relative;
+            z-index: 20;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: #64748B;
+            transition: all 0.3s ease;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border-top: 6px solid #CBD5E1;
+            transition: transform 0.3s ease;
+        }
+
+        /* Stage 1 Styling */
+        .stage-1 .marker {
+            border-color: #94A3B8;
+            color: #475569;
+        }
+
+        .stage-1 .card {
+            border-top-color: #94A3B8;
+        }
+
+        /* Stage 2 Styling */
+        .stage-2 .marker {
+            border-color: #60A5FA;
+            color: #2563EB;
+        }
+
+        .stage-2 .card {
+            border-top-color: #60A5FA;
+        }
+
+        /* Stage 3 Styling */
+        .stage-3 .marker {
+            border-color: #3B82F6;
+            color: #1D4ED8;
+        }
+
+        .stage-3 .card {
+            border-top-color: #3B82F6;
+        }
+
+        /* Stage 4 Styling (Current) */
+        .stage-4 .marker {
+            border-color: #00AEEF;
+            background: #00AEEF;
+            color: white;
+            box-shadow: 0 0 0 4px rgba(0, 174, 239, 0.2);
+            transform: scale(1.1);
+        }
+
+        .stage-4 .card {
+            border-top-color: #00AEEF;
+            background: #F0F9FF;
+            transform: translateY(-10px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Card Content */
+        .card-icon {
+            font-size: 28px;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        .stage-1 .card-icon {
+            color: #64748B;
+        }
+
+        .stage-2 .card-icon {
+            color: #60A5FA;
+        }
+
+        .stage-3 .card-icon {
+            color: #3B82F6;
+        }
+
+        .stage-4 .card-icon {
+            color: #00AEEF;
+        }
+
+        .card-title {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            color: #00395D;
+            margin-bottom: 8px;
+            text-align: center;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .card-badge {
+            align-self: center;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 4px 12px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+
+        .stage-1 .card-badge {
+            background: #F1F5F9;
+            color: #64748B;
+        }
+
+        .stage-2 .card-badge {
+            background: #EFF6FF;
+            color: #3B82F6;
+        }
+
+        .stage-3 .card-badge {
+            background: #DBEAFE;
+            color: #1D4ED8;
+        }
+
+        .stage-4 .card-badge {
+            background: #00AEEF;
+            color: white;
+        }
+
+        .feature-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            flex: 1;
+        }
+
+        .feature-item {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
+            font-size: 13px;
+            line-height: 1.4;
+            color: #475569;
+        }
+
+        .feature-icon {
+            margin-top: 2px;
+            font-size: 12px;
+        }
+
+        .pros {
+            color: #10B981;
+        }
+
+        .cons {
+            color: #EF4444;
+        }
+
+        .neutral {
+            color: #64748B;
+        }
+
+        .evolution-arrow {
+            position: absolute;
+            top: 50%;
+            right: -10px;
+            color: #CBD5E1;
+            font-size: 20px;
+            z-index: 5;
+        }
+
+        /* Legend */
+        .legend {
+            position: absolute;
+            bottom: 20px;
+            left: 60px;
+            display: flex;
+            gap: 20px;
+            font-size: 12px;
+            color: #64748B;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .legend-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="slide-container">
+        <!-- Header -->
+        <header class="header">
+            <h1 class="header-title">Our Journey: From Exploration to Agentic POC</h1>
+            <div class="logo-container">
+                <i class="fa-solid fa-building-columns" style="color: #00AEEF;"></i>
+                <span>BARCLAYS</span>
+            </div>
+        </header>
+        <!-- Main Content -->
+        <div class="content-body">
+            <div class="timeline-wrapper">
+                <!-- Line Background -->
+                <div class="timeline-line"></div>
+                <div class="timeline-line-progress"></div>
+                <!-- Stage 1 -->
+                <div class="card-container stage-1">
+                    <div class="marker">1</div>
+                    <div class="card">
+                        <div class="card-icon"><i class="fa-brands fa-gitlab"></i></div>
+                        <h3 class="card-title">GitLab Duo Exploration</h3>
+                        <span class="card-badge">Initial Attempt</span>
+                        <ul class="feature-list">
+                            <li class="feature-item">
+                                <i class="fa-solid fa-check feature-icon pros"></i>
+                                <p>Short learning curve for team adoption</p>
+                            </li>
+                            <li class="feature-item">
+                                <i class="fa-solid fa-xmark feature-icon cons"></i>
+                                <p>No API access (Chat only)</p>
+                            </li>
+                            <li class="feature-item">
+                                <i class="fa-solid fa-xmark feature-icon cons"></i>
+                                <p>Non-idempotent responses</p>
+                            </li>
+                            <li class="feature-item">
+                                <i class="fa-solid fa-xmark feature-icon cons"></i>
+                                <p>High human intervention required</p>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <!-- Stage 2 -->
+                <div class="card-container stage-2">
+                    <div class="marker">2</div>
+                    <div class="card">
+                        <div class="card-icon"><i class="fa-solid fa-lightbulb"></i></div>
+                        <h3 class="card-title">LOTUS Inspiration</h3>
+                        <span class="card-badge">Concept Validation</span>
+                        <ul class="feature-list">
+                            <li class="feature-item">
+                                <i class="fa-solid fa-bolt feature-icon neutral"></i>
+                                <p>Observed Corporate Banking's "LOTUS" platform</p>
+                            </li>
+                            <li class="feature-item">
+                                <i class="fa-solid fa-check feature-icon pros"></i>
+                                <p>Validates agentic approach for KTLO tasks</p>
+                            </li>
+                            <li class="feature-item">
+                                <i class="fa-solid fa-arrow-right feature-icon neutral"></i>
+                                <p>Sparked vision for dedicated Testing Platform</p>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <!-- Stage 3 -->
+                <div class="card-container stage-3">
+                    <div class="marker">3</div>
+                    <div class="card">
+                        <div class="card-icon"><i class="fa-solid fa-cloud"></i></div>
+                        <h3 class="card-title">Claude via Bedrock</h3>
+                        <span class="card-badge">Technical Spike</span>
+                        <ul class="feature-list">
+                            <li class="feature-item">
+                                <i class="fa-solid fa-check feature-icon pros"></i>
+                                <p>Superior model (Sonnet 3.5)</p>
+                            </li>
+                            <li class="feature-item">
+                                <i class="fa-solid fa-check feature-icon pros"></i>
+                                <p>Idempotent &amp; faster generation</p>
+                            </li>
+                            <li class="feature-item">
+                                <i class="fa-solid fa-check feature-icon pros"></i>
+                                <p>Better 1st attempt acceptance</p>
+                            </li>
+                            <li class="feature-item">
+                                <i class="fa-solid fa-exclamation feature-icon cons"></i>
+                                <p>Still significant human chat interaction</p>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <!-- Stage 4 -->
+                <div class="card-container stage-4">
+                    <div class="marker"><i class="fa-solid fa-robot"></i></div>
+                    <div class="card">
+                        <div class="card-icon"><i class="fa-solid fa-network-wired"></i></div>
+                        <h3 class="card-title">LangGraph Agentic POC</h3>
+                        <span class="card-badge">Current Solution</span>
+                        <ul class="feature-list">
+                            <li class="feature-item">
+                                <i class="fa-solid fa-check feature-icon pros"></i>
+                                <p>Full 12-stage workflow automation</p>
+                            </li>
+                            <li class="feature-item">
+                                <i class="fa-solid fa-check feature-icon pros"></i>
+                                <p>Tools: File I/O, Git Clone, Repo Map</p>
+                            </li>
+                            <li class="feature-item">
+                                <i class="fa-solid fa-check feature-icon pros"></i>
+                                <p>Least human intervention (Review only)</p>
+                            </li>
+                            <li class="feature-item">
+                                <i class="fa-solid fa-star feature-icon pros"></i>
+                                <p>Highest consistency &amp; coverage</p>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <!-- Legend -->
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-dot" style="background: #10B981;"></div>
+                    <span>Key Advantage</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot" style="background: #EF4444;"></div>
+                    <span>Limitation</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
